@@ -123,6 +123,8 @@ app.get('/api/leaderboard-scores', async (req, res) => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
+console.log(`📈 Got ${topScoresRes.data.length} top scores for user ${username}`);
+
     const leaderboardMatches = [];
 
 for (const score of topScoresRes.data) {
@@ -137,8 +139,12 @@ for (const score of topScoresRes.data) {
     });
 
     const scores = leaderboardRes.data.scores;
-    const found = scores.find((s) => s.user.id === userId);
 
+    // 👥 Log top 5 usernames
+    const topUsers = scores.slice(0, 5).map(s => s.user.username).join(', ');
+    console.log(`   👥 Top 5 players: ${topUsers}`);
+
+    const found = scores.find((s) => s.user.id === userId);
     console.log(`   ↳ In leaderboard: ${!!found}`);
 
     if (found) {
@@ -158,7 +164,6 @@ for (const score of topScoresRes.data) {
     console.warn(`⚠️ Failed leaderboard fetch for map ${beatmapId}:`, err.response?.data || err.message);
   }
 }
-
 
     res.json(leaderboardMatches);
   } catch (err) {
