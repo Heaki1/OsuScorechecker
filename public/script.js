@@ -1,5 +1,6 @@
 document.getElementById("checkBtn").addEventListener("click", async () => {
   const username = document.getElementById("username").value.trim();
+  console.log("Username entered:", username);
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "Loading...";
 
