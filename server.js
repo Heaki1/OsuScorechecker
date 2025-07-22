@@ -119,55 +119,59 @@ app.get('/api/leaderboard-scores', async (req, res) => {
     const userId = userRes.data.id;
     console.log(`✅ Found user ID: ${userId}`);
 
-    const topScoresRes = await axios.get(`https://osu.ppy.sh/api/v2/users/${userId}/scores/best?limit=50`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-console.log(`📈 Got ${topScoresRes.data.length} top scores for user ${username}`);
-
     const leaderboardMatches = [];
 
-for (const score of topScoresRes.data) {
-  const beatmapId = score.beatmap?.id;
+    let page = 1;
+    const maxPages = 10; // You can increase this for deeper scanning
 
-if (!beatmapId || !score.beatmapset) {
-  console.log(`⚠️ Skipping invalid or missing beatmap info for score:`, score);
-  continue;
-}
+    while (page <= maxPages) {
+      console.log(`📄 Fetching beatmaps page ${page}`);
 
-   console.log(`🌀 Checking map: ${score.beatmapset.title} [${score.beatmap.version}]`);
-
-  try {
-    const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmapId}/scores`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    const scores = leaderboardRes.data.scores;
-
-    // 👥 Log top 5 usernames
-    const topUsers = scores.slice(0, 5).map(s => s.user.username).join(', ');
-    console.log(`   👥 Top 5 players: ${topUsers}`);
-
-    const found = scores.find((s) => s.user.id === userId);
-    console.log(`   ↳ In leaderboard: ${!!found}`);
-
-    if (found) {
-      leaderboardMatches.push({
-        beatmap: {
-          id: score.beatmap.id,
-          title: `${score.beatmapset.artist} - ${score.beatmapset.title} [${score.beatmap.version}]`,
-          url: `https://osu.ppy.sh/beatmaps/${score.beatmap.id}`
-        },
-        rank: scores.findIndex(s => s.user.id === userId) + 1,
-        score: found.score,
-        accuracy: (found.accuracy * 100).toFixed(2) + '%',
-        mods: found.mods.join(',') || 'None'
+      const searchRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmapsets/search`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          mode: 'osu',
+          status: 'ranked',
+          page
+        }
       });
+
+      const beatmapsets = searchRes.data.beatmapsets || [];
+
+      for (const set of beatmapsets) {
+        for (const beatmap of set.beatmaps) {
+          try {
+            const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmap.id}/scores`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const scores = leaderboardRes.data.scores;
+            const found = scores.find(s => s.user.id === userId);
+
+            if (found) {
+              const rank = scores.findIndex(s => s.user.id === userId) + 1;
+              console.log(`✅ Found on map ${set.artist} - ${set.title} [${beatmap.version}] at rank ${rank}`);
+
+              leaderboardMatches.push({
+                beatmap: {
+                  id: beatmap.id,
+                  title: `${set.artist} - ${set.title} [${beatmap.version}]`,
+                  url: `https://osu.ppy.sh/beatmaps/${beatmap.id}`
+                },
+                rank,
+                score: found.score,
+                accuracy: (found.accuracy * 100).toFixed(2) + '%',
+                mods: found.mods.join(', ') || 'None'
+              });
+            }
+          } catch (err) {
+            console.warn(`⚠️ Failed leaderboard fetch for map ${beatmap.id}:`, err.response?.data || err.message);
+          }
+        }
+      }
+
+      page++;
     }
-  } catch (err) {
-    console.warn(`⚠️ Failed leaderboard fetch for map ${beatmapId}:`, err.response?.data || err.message);
-  }
-}
 
     res.json(leaderboardMatches);
   } catch (err) {
@@ -176,8 +180,7 @@ if (!beatmapId || !score.beatmapset) {
   }
 });
 
-
 app.listen(port, () => {
-  console.log(`✅ osu! API proxy running at http://localhost:${port}`);
+  const publicUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  console.log(`✅ osu! API proxy running at ${publicUrl}`);
 });
-
