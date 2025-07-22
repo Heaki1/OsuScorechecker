@@ -125,35 +125,40 @@ app.get('/api/leaderboard-scores', async (req, res) => {
 
     const leaderboardMatches = [];
 
-    for (const score of topScoresRes.data) {
-      const beatmapId = score.beatmap?.id;
-      if (!beatmapId || !score.beatmap?.beatmapset) continue;
+for (const score of topScoresRes.data) {
+  const beatmapId = score.beatmap?.id;
+  if (!beatmapId || !score.beatmap?.beatmapset) continue;
 
-      try {
-        const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmapId}/scores`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+  console.log(`🌀 Checking map: ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`);
 
-        const scores = leaderboardRes.data.scores;
-        const found = scores.find((s) => s.user.id === userId);
+  try {
+    const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmapId}/scores`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-        if (found) {
-          leaderboardMatches.push({
-            beatmap: {
-              id: score.beatmap.id,
-              title: `${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`,
-              url: `https://osu.ppy.sh/beatmaps/${score.beatmap.id}`
-            },
-            rank: scores.findIndex(s => s.user.id === userId) + 1,
-            score: found.score,
-            accuracy: (found.accuracy * 100).toFixed(2) + '%',
-            mods: found.mods.join(',') || 'None'
-          });
-        }
-      } catch (err) {
-        console.warn(`⚠️ Leaderboard fetch failed for map ${beatmapId}:`, err.response?.data || err.message);
-      }
+    const scores = leaderboardRes.data.scores;
+    const found = scores.find((s) => s.user.id === userId);
+
+    console.log(`   ↳ In leaderboard: ${!!found}`);
+
+    if (found) {
+      leaderboardMatches.push({
+        beatmap: {
+          id: score.beatmap.id,
+          title: `${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`,
+          url: `https://osu.ppy.sh/beatmaps/${score.beatmap.id}`
+        },
+        rank: scores.findIndex(s => s.user.id === userId) + 1,
+        score: found.score,
+        accuracy: (found.accuracy * 100).toFixed(2) + '%',
+        mods: found.mods.join(',') || 'None'
+      });
     }
+  } catch (err) {
+    console.warn(`⚠️ Failed leaderboard fetch for map ${beatmapId}:`, err.response?.data || err.message);
+  }
+}
+
 
     res.json(leaderboardMatches);
   } catch (err) {
