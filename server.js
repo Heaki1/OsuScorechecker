@@ -129,7 +129,11 @@ console.log(`📈 Got ${topScoresRes.data.length} top scores for user ${username
 
 for (const score of topScoresRes.data) {
   const beatmapId = score.beatmap?.id;
-  if (!beatmapId || !score.beatmap?.beatmapset) continue;
+
+  if (!beatmapId || !score.beatmap?.beatmapset) {
+    console.log(`⚠️ Skipping invalid or missing beatmap info for score:`, score);
+    continue;
+  }
 
   console.log(`🌀 Checking map: ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`);
 
