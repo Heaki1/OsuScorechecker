@@ -110,11 +110,15 @@ app.get('/api/leaderboard-scores', async (req, res) => {
 
   try {
     const token = await getAccessToken();
+    console.log("🔍 Fetching user ID for:", username);
+
     const userRes = await axios.get(`https://osu.ppy.sh/api/v2/users/${username}/osu`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
     const userId = userRes.data.id;
+    console.log(`✅ Found user ID: ${userId}`);
+
     const topScoresRes = await axios.get(`https://osu.ppy.sh/api/v2/users/${userId}/scores/best?limit=50`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -147,16 +151,17 @@ app.get('/api/leaderboard-scores', async (req, res) => {
           });
         }
       } catch (err) {
-        console.warn(`⚠️ Failed for beatmap ${beatmapId}`);
+        console.warn(`⚠️ Leaderboard fetch failed for map ${beatmapId}:`, err.response?.data || err.message);
       }
     }
 
     res.json(leaderboardMatches);
   } catch (err) {
-    console.error("❌ Leaderboard error:", err.message);
+    console.error("❌ Leaderboard error details:", err.response?.data || err.message);
     res.status(500).json({ error: 'Failed to fetch leaderboard scores' });
   }
 });
+
 
 app.listen(port, () => {
   console.log(`✅ osu! API proxy running at http://localhost:${port}`);
