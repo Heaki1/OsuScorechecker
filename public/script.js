@@ -11,22 +11,28 @@ document.getElementById("checkBtn").addEventListener("click", async () => {
 
   try {
     const res = await fetch(`https://osuscorechecker.onrender.com/api/leaderboard-scores?user=${encodeURIComponent(username)}`);
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!data || data.length === 0) {
-      resultsDiv.innerHTML = "No leaderboard scores found.";
-      return;
-    }
+if (!Array.isArray(data)) {
+  console.error("Server error response:", data);
+  resultsDiv.innerHTML = "❌ Server error: " + (data?.error || "Unknown error");
+  return;
+}
 
-    resultsDiv.innerHTML = data.map(item => `
-      <div class="result-card">
-        <strong><a href="${item.beatmap.url}" target="_blank">${item.beatmap.title}</a></strong><br />
-        Rank: #${item.rank}<br />
-        Score: ${item.score.toLocaleString()}<br />
-        Accuracy: ${item.accuracy}<br />
-        Mods: ${item.mods}
-      </div>
-    `).join("");
+if (data.length === 0) {
+  resultsDiv.innerHTML = "No leaderboard scores found.";
+  return;
+}
+
+resultsDiv.innerHTML = data.map(item => `
+  <div class="result-card">
+    <strong><a href="${item.beatmap.url}" target="_blank">${item.beatmap.title}</a></strong><br />
+    Rank: #${item.rank}<br />
+    Score: ${item.score.toLocaleString()}<br />
+    Accuracy: ${item.accuracy}<br />
+    Mods: ${item.mods}
+  </div>
+`).join("");
 
   } catch (err) {
     resultsDiv.innerHTML = "❌ Failed to load data.";
