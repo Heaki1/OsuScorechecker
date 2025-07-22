@@ -135,7 +135,7 @@ if (!beatmapId || !score.beatmapset) {
   continue;
 }
 
-  console.log(`🌀 Checking map: ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`);
+   console.log(`🌀 Checking map: ${score.beatmapset.title} [${score.beatmap.version}]`);
 
   try {
     const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmapId}/scores`, {
@@ -155,7 +155,7 @@ if (!beatmapId || !score.beatmapset) {
       leaderboardMatches.push({
         beatmap: {
           id: score.beatmap.id,
-          title: `${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} [${score.beatmap.version}]`,
+          title: `${score.beatmapset.artist} - ${score.beatmapset.title} [${score.beatmap.version}]`,
           url: `https://osu.ppy.sh/beatmaps/${score.beatmap.id}`
         },
         rank: scores.findIndex(s => s.user.id === userId) + 1,
