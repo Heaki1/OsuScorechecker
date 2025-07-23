@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch(`https://osuscorechecker.onrender.com/api/leaderboard-scores?user=${encodeURIComponent(username)}`);
+        const res = await fetch(`/api/leaderboard-scores?user=${encodeURIComponent(username)}`);
         const data = await res.json();
 
         if (!Array.isArray(data)) {
@@ -56,12 +56,12 @@ window.addEventListener("DOMContentLoaded", () => {
       return res.json();
     })
     .then(user => {
-      document.getElementById("results").innerHTML = `
-        🎉 Welcome, <strong>${user.username}</strong>!<br>
-        <img src="${user.avatar_url}" width="100"><br>
-        Global Rank: #${user.statistics.global_rank}<br>
-        PP: ${user.statistics.pp.toFixed(2)}
-      `;
+document.getElementById("userInfo").innerHTML = `
+  🎉 Welcome, <strong>${user.username}</strong>!<br>
+  <img src="${user.avatar_url}" width="100"><br>
+  Global Rank: #${user.statistics.global_rank}<br>
+  PP: ${user.statistics.pp.toFixed(2)}
+`;
     })
     .catch(() => {
       document.getElementById("results").innerHTML = `
