@@ -1,3 +1,27 @@
+window.addEventListener("DOMContentLoaded", () => {
+  fetch("/api/me")
+    .then(res => {
+      if (!res.ok) throw new Error("Not logged in");
+      return res.json();
+    })
+    .then(user => {
+      // Show user info on the page
+      document.getElementById("results").innerHTML = `
+        🎉 Welcome, <strong>${user.username}</strong>!<br>
+        <img src="${user.avatar_url}" alt="Avatar" width="100"><br>
+        Global Rank: #${user.statistics.global_rank}<br>
+        PP: ${user.statistics.pp.toFixed(2)}
+      `;
+    })
+    .catch(() => {
+      // Not logged in — optionally show login prompt
+      document.getElementById("results").innerHTML = `
+        <a href="/login"><button>🔐 Login with osu!</button></a>
+      `;
+    });
+});
+
+
 // Handles Top Scores Leaderboard (via "Check Leaderboard Scores" button)
 document.getElementById("checkBtn").addEventListener("click", async () => {
   const username = document.getElementById("username").value.trim();
