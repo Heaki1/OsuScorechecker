@@ -9,9 +9,16 @@ window.addEventListener("DOMContentLoaded", () => {
   const checkBtn = document.getElementById("checkBtn");
   if (checkBtn) {
     checkBtn.addEventListener("click", async () => {
-      const username = document.getElementById("username").value.trim();
+      const input = document.getElementById("username");
       const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "Loading...";
+
+      if (!input || !resultsDiv) {
+        console.error("Missing #username or #results element in DOM.");
+        return;
+      }
+
+      const username = input.value.trim();
+      resultsDiv.innerHTML = "🔄 Loading leaderboard scores...";
 
       if (!username) {
         resultsDiv.innerHTML = "❌ Please enter a username.";
@@ -24,12 +31,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
         if (!Array.isArray(data)) {
           console.error("Server error response:", data);
-          resultsDiv.innerHTML = "❌ Server error: " + (data?.error || "Unknown error");
+          resultsDiv.innerHTML = `❌ Server error: ${data?.error || "Unknown error"}`;
           return;
         }
 
         if (data.length === 0) {
-          resultsDiv.innerHTML = "No leaderboard scores found.";
+          resultsDiv.innerHTML = "⚠️ No leaderboard scores found for this user.";
           return;
         }
 
@@ -39,12 +46,13 @@ window.addEventListener("DOMContentLoaded", () => {
             Rank: #${item.rank}<br />
             Score: ${item.score.toLocaleString()}<br />
             Accuracy: ${item.accuracy}<br />
-            Mods: ${item.mods}
+            Mods: ${item.mods || "None"}
           </div>
         `).join("");
+
       } catch (err) {
+        console.error("❌ Failed to load leaderboard scores:", err);
         resultsDiv.innerHTML = "❌ Failed to load data.";
-        console.error(err);
       }
     });
   }
@@ -56,17 +64,22 @@ window.addEventListener("DOMContentLoaded", () => {
       return res.json();
     })
     .then(user => {
-document.getElementById("userInfo").innerHTML = `
-  🎉 Welcome, <strong>${user.username}</strong>!<br>
-  <img src="${user.avatar_url}" width="100"><br>
-  Global Rank: #${user.statistics.global_rank}<br>
-  PP: ${user.statistics.pp.toFixed(2)}
-`;
-    })
-    .catch(() => {
-      document.getElementById("results").innerHTML = `
-        <a href="/login" class="login-button">🔐 Login with osu!</a>
+      document.getElementById("userInfo").innerHTML = `
+        🎉 Welcome, <strong>${user.username}</strong>!<br>
+        <img src="${user.avatar_url}" width="100"><br>
+        Global Rank: #${user.statistics.global_rank}<br>
+        PP: ${user.statistics.pp.toFixed(2)}
       `;
+    })
+    .catch(err => {
+      console.warn("Not logged in or failed to fetch /api/me:", err);
+      const resultsDiv = document.getElementById("results");
+      if (resultsDiv) {
+        resultsDiv.innerHTML = `
+          <a href="/login" class="login-button">🔐 Login with osu!</a>
+        `;
+      } else {
+        console.warn("⚠️ #results element not found in DOM.");
+      }
     });
 });
-
