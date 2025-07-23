@@ -4,6 +4,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const session = require('express-session'); // 🔹 Import session
+
 const NodeCache = require("node-cache");
 const cache = new NodeCache({ stdTTL: 3600 }); // Cache for 1 hour
 
@@ -13,6 +15,17 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 🔸 Use session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'osu_fallback_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // only true on HTTPS
+    maxAge: 3600000 // 1 hour
+  }
+}));
 
 const client_id = process.env.OSU_CLIENT_ID;
 const client_secret = process.env.OSU_CLIENT_SECRET;
