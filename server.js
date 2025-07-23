@@ -74,11 +74,10 @@ app.get("/callback", async (req, res) => {
     const { access_token, refresh_token, expires_in } = tokenRes.data;
 
     // Store in memory (or Redis/DB ideally)
-    req.session = {
-      access_token,
-      refresh_token,
-      token_expiry: Date.now() + (expires_in * 1000)
-    };
+
+req.session.access_token = access_token;
+req.session.refresh_token = refresh_token;
+req.session.token_expiry = Date.now() + (expires_in * 1000);
 
     res.send("✅ Logged in. You may now use the scanner.");
   } catch (err) {
