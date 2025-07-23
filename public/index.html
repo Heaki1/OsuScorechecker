@@ -10,18 +10,16 @@
   <div class="container">
     <h1>osu! Score Checker</h1>
 
-    <!-- 🔹 Add login button here -->
-    <a href="/login">
-      <button style="margin-bottom: 20px;">🔐 Login with osu!</button>
-    </a>
+    <!-- No login button here: it’s handled by script.js -->
 
+    <!-- Leaderboard input -->
     <input id="usernameInput" type="text" placeholder="Enter osu! username" />
-    <button onclick="fetchGlobalLeaderboard()">Check Global Leaderboard</button>
-    
+    <button id="checkLeaderboard">Check Global Leaderboard</button>
+
+    <!-- Display area -->
     <div id="results"></div>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
-
