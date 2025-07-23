@@ -4,6 +4,9 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 3600 }); // Cache for 1 hour
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -38,6 +41,38 @@ async function getAccessToken() {
   token_expiry = now + (response.data.expires_in * 1000) - 10000;
   return access_token;
 }
+
+app.get("/login", (req, res) => {
+  const redirect = `https://osu.ppy.sh/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(process.env.OSU_REDIRECT_URI)}&response_type=code&scope=identify public`;
+  res.redirect(redirect);
+});
+
+app.get("/callback", async (req, res) => {
+  const code = req.query.code;
+  try {
+    const tokenRes = await axios.post("https://osu.ppy.sh/oauth/token", {
+      client_id,
+      client_secret,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: process.env.OSU_REDIRECT_URI,
+    });
+
+    const { access_token, refresh_token, expires_in } = tokenRes.data;
+
+    // Store in memory (or Redis/DB ideally)
+    req.session = {
+      access_token,
+      refresh_token,
+      token_expiry: Date.now() + (expires_in * 1000)
+    };
+
+    res.send("✅ Logged in. You may now use the scanner.");
+  } catch (err) {
+    console.error("OAuth callback failed", err.response?.data || err.message);
+    res.status(500).send("OAuth error");
+  }
+});
 
 // Health check
 app.get('/health', (req, res) => {
