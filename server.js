@@ -79,7 +79,7 @@ req.session.access_token = access_token;
 req.session.refresh_token = refresh_token;
 req.session.token_expiry = Date.now() + (expires_in * 1000);
 
-    res.send("✅ Logged in. You may now use the scanner.");
+    res.redirect("/");
   } catch (err) {
     console.error("OAuth callback failed", err.response?.data || err.message);
     res.status(500).send("OAuth error");
@@ -210,6 +210,25 @@ app.get('/api/global-leaderboard', async (req, res) => {
     res.json(leaderboardMatches);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/me", async (req, res) => {
+  if (!req.session.access_token) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  try {
+    const userRes = await axios.get("https://osu.ppy.sh/api/v2/me", {
+      headers: {
+        Authorization: `Bearer ${req.session.access_token}`
+      }
+    });
+
+    res.json(userRes.data); // ✅ Send full osu! user data
+  } catch (err) {
+    console.error("❌ Error fetching /me:", err.message);
+    res.status(500).json({ error: "Failed to fetch user info" });
   }
 });
 
