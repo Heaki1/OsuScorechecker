@@ -19,6 +19,7 @@ input, button {
   margin-top: 10px;
   width: 100%;
   margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
 button {
@@ -26,6 +27,9 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+  padding: 10px;
+  font-size: 16px;
+  transition: background 0.2s ease-in-out;
 }
 
 button:hover {
@@ -42,4 +46,19 @@ button:hover {
 .result-card a {
   color: #66ccff;
   text-decoration: none;
+  font-weight: bold;
+}
+
+#results h2 {
+  margin-bottom: 10px;
+}
+
+#results ul {
+  list-style: none;
+  padding: 0;
+}
+
+#results li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
 }

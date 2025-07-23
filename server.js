@@ -104,36 +104,26 @@ app.get('/api/search', async (req, res) => {
 });
 
 // Leaderboard scores
-app.get('/api/leaderboard-scores', async (req, res) => {
+app.get('/api/global-leaderboard', async (req, res) => {
   const username = req.query.user;
   if (!username) return res.status(400).json({ error: 'Missing ?user=' });
 
   try {
     const token = await getAccessToken();
-    console.log("🔍 Fetching user ID for:", username);
-
     const userRes = await axios.get(`https://osu.ppy.sh/api/v2/users/${username}/osu`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
     const userId = userRes.data.id;
-    console.log(`✅ Found user ID: ${userId}`);
-
     const leaderboardMatches = [];
 
     let page = 1;
-    const maxPages = 10; // You can increase this for deeper scanning
+    const maxPages = 100; // You can go up to 500+ if needed
 
     while (page <= maxPages) {
-      console.log(`📄 Fetching beatmaps page ${page}`);
-
       const searchRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmapsets/search`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: {
-          mode: 'osu',
-          status: 'ranked',
-          page
-        }
+        params: { mode: 'osu', status: 'ranked', page }
       });
 
       const beatmapsets = searchRes.data.beatmapsets || [];
@@ -141,31 +131,28 @@ app.get('/api/leaderboard-scores', async (req, res) => {
       for (const set of beatmapsets) {
         for (const beatmap of set.beatmaps) {
           try {
-            const leaderboardRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmap.id}/scores`, {
+            const lbRes = await axios.get(`https://osu.ppy.sh/api/v2/beatmaps/${beatmap.id}/scores`, {
               headers: { Authorization: `Bearer ${token}` }
             });
 
-            const scores = leaderboardRes.data.scores;
+            const scores = lbRes.data.scores;
             const found = scores.find(s => s.user.id === userId);
 
             if (found) {
-              const rank = scores.findIndex(s => s.user.id === userId) + 1;
-              console.log(`✅ Found on map ${set.artist} - ${set.title} [${beatmap.version}] at rank ${rank}`);
-
               leaderboardMatches.push({
                 beatmap: {
                   id: beatmap.id,
                   title: `${set.artist} - ${set.title} [${beatmap.version}]`,
                   url: `https://osu.ppy.sh/beatmaps/${beatmap.id}`
                 },
-                rank,
+                rank: scores.findIndex(s => s.user.id === userId) + 1,
                 score: found.score,
                 accuracy: (found.accuracy * 100).toFixed(2) + '%',
                 mods: found.mods.join(', ') || 'None'
               });
             }
-          } catch (err) {
-            console.warn(`⚠️ Failed leaderboard fetch for map ${beatmap.id}:`, err.response?.data || err.message);
+          } catch (e) {
+            // Ignore 404s
           }
         }
       }
@@ -175,8 +162,7 @@ app.get('/api/leaderboard-scores', async (req, res) => {
 
     res.json(leaderboardMatches);
   } catch (err) {
-    console.error("❌ Leaderboard error details:", err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch leaderboard scores' });
+    res.status(500).json({ error: err.message });
   }
 });
 
