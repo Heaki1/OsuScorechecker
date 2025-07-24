@@ -24,15 +24,13 @@ app.use(
       useDefaults: true,
       directives: {
         "script-src": ["'self'", "https://cdnjs.cloudflare.com"],
-        "img-src": ["'self'", "data:", "https://osu.ppy.sh"],
         "style-src": ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https://osu.ppy.sh"],
         "connect-src": ["'self'", "https://osu.ppy.sh"],
-        "frame-ancestors": ["'none'"],
       },
     },
   })
 );
-
 
 app.set('trust proxy', 1); 
 
