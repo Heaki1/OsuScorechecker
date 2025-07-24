@@ -15,6 +15,10 @@ const userCache = new NodeCache({ stdTTL: 1800 }); // User data cache for 30 min
 const leaderboardCache = new NodeCache({ stdTTL: 600 }); // Leaderboards cache for 10 minutes
 
 const app = express();
+
+// ✅ Trust proxy for correct IP detection behind Render
+app.set('trust proxy', true);
+
 const port = process.env.PORT || 3000;
 
 // Rate limiting
