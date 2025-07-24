@@ -16,8 +16,10 @@ const leaderboardCache = new NodeCache({ stdTTL: 600 }); // Leaderboards cache f
 
 const app = express();
 
-// ✅ Trust proxy for correct IP detection behind Render
-app.set('trust proxy', true);
+const helmet = require('helmet');
+app.use(helmet());
+
+app.set('trust proxy', 1); 
 
 const port = process.env.PORT || 3000;
 
